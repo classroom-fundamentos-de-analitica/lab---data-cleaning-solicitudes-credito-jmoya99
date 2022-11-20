@@ -16,35 +16,44 @@ def clean_data():
     #
     # Inserte su código aquí
     #
+    df = df.dropna()
+
     df.sexo = df.sexo.str.lower()
+
     df.tipo_de_emprendimiento = df.tipo_de_emprendimiento.str.lower()
-    df.idea_negocio = df.idea_negocio.str.lower().str.replace('_',' ').str.replace('-',' ').str.strip()
-    df.barrio = df.barrio.str.lower().str.replace('_',' ').str.replace('-',' ').str.strip()
+
+    df.idea_negocio = df.idea_negocio.apply(
+        lambda x: x.replace('-', ' ').replace('_', ' ').strip().lower())
+
+    df.barrio = df.barrio.apply(
+        lambda x: x.replace('-', ' ').replace('_', ' ').replace('.', '').lower())
+    
+    df.comuna_ciudadano = df.comuna_ciudadano.astype(str).apply(
+        lambda x: x.replace('.0', ''))
+
     df.fecha_de_beneficio = pd.to_datetime(
         df.fecha_de_beneficio,
-
-        #
-        # Por defecto False. Cuando no se especifica
-        # el formato, infiere el formato de la fecha
-        #
         infer_datetime_format=True,
-
-        #
-        # Controla el comportamiento ante datos
-        # invalidos
-        #
-        #   * 'raise': genera una excepción
-        #   * 'coerce': retorna un NaT
-        #   * 'ignore': retorna el mismo valor
-        #
-        errors='coerce',
+        errors='ignore',
+        dayfirst=True
     )
-    df.fecha_de_beneficio = df.fecha_de_beneficio.dt.strftime("%d-%m-%Y")
-    df.monto_del_credito = df.monto_del_credito.str.replace('$','').str.replace(',','').str.replace('.00','').str.strip()
-    df.línea_credito = df.línea_credito.str.lower().str.replace('-','').str.replace('_',' ').str.replace(' ','').str.strip()
-    df.notna()
-    df.drop_duplicates(inplace=True)
-    print(df.sexo.value_counts().to_list())
+
+    df.fecha_de_beneficio = pd.to_datetime(
+        df.fecha_de_beneficio,
+        infer_datetime_format=True,
+        errors='ignore',
+        yearfirst=True
+    )
+
+    df.fecha_de_beneficio = df.fecha_de_beneficio.dt.strftime('%d-%m-%Y')
+
+    df.monto_del_credito = df.monto_del_credito.apply(
+        lambda x: int(x.replace(',', '').replace('$ ', '').replace('.00', '')))
+    
+    df.línea_credito = df.línea_credito.apply(
+        lambda x: x.replace('-', ' ').replace('_', ' ').strip().lower())
+
+    df = df.drop_duplicates()
     return df
 
 clean_data()
